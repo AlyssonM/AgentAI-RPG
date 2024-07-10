@@ -5,5 +5,3 @@ langchain-openai
 langchain-groq
 google-generativeai
 pyTelegramBotAPI
-flask
-exa_py

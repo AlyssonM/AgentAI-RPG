@@ -11,10 +11,15 @@ class GameMasterTasks:
         return Task(
             description=dedent(f"""
                                Generate a description of the game world, including geography, culture and history, 
-                               for the selected theme "{theme}" and send it to the group {chat_id}. Use the random seed to generate 
-                               completely new worlds each time: {random.randint(1, 100000000)}."""
+                               for the selected theme "{theme}". Don't initiate any requets or events. Your goal is
+                               exclusively to create a world and a narrative.
+                               Use some real random seed mechanism to generate a completely new worlds for each task.
+                               Send the full description to the group {chat_id} only once and finish your job.
+                               """
                                ),
-            expected_output="A detailed captivating and immersive text-based RPG game. Output only in Portuguese (pt-br) with maximum of 1000 tokens",
+            expected_output=dedent(f"""A detailed, captivating and immersive description of a text-based RPG game sent to {chat_id}. 
+                                Output only in Portuguese (pt-br) with maximum of 1000 tokens
+                                """),
             tools=tools,
             agent=self.agent,
             context=context,
@@ -26,28 +31,42 @@ class BardTasks:
     def __init__(self, agent):
         self.agent = agent
         
-    def narrate_event(self, tools, chat_id, game_context, event_description, callback):
+    def narrate_event(self, tools, chat_id, user_id, game_chapter, event, callback):
         return Task(
             description=dedent(f"""
-                               Narrate the event based on the current game context 'rolling': {game_context}, and player actions:
-                               {event_description}. Send it to the group {chat_id}.
-                               """),
-            expected_output="""A vivid and engaging narrative that enhances the game experience with maximum of 200 tokens. 
-                            Choices presented to the user must labeled by number (max. of 3 actions choices). Output only in Portuguese (pt-br).
-                            """,
+                               Narrate the event "{event}" based on the current game chapter: {game_chapter}. 
+                               Send it to the group {chat_id} to finish your job.
+                               """
+                               ),
+            expected_output=dedent(f"""A vivid and engaging narrative that enhances the game experience with maximum of 
+                                200 tokens. The output MUST be a JSON formatted dictionary structure for the event
+                                containing the fields: an incremental event_id, user_id={user_id}, description, 
+                                choices with fields choice_id and text. (max. of 3 actions choices). choices in description
+                                must be enumarated and sent to {chat_id}.
+                                Output only in Portuguese (pt-br).
+                                """
+                                ),
             tools=tools,
             agent=self.agent,
             callback=callback,
             human_input=False
         )
 
-    def action_event(self, tools, chat_id, choice, game_context, callback):
+    def action_event(self, tools, choice_id, event_id, callback):
         return Task(
             description=dedent(f"""
-                           Resolve the user's choice: {choice}, based on the current game context: {game_context['rolling']}. 
-                           This action should directly address the consequences of the user's last choice without initiating any new action requests.
+                           Resolve the user's choice={choice_id}, for the events={event_id}. 
+                           This action should directly address the results of the user's choice without initiating 
+                           any new events.
                            """),
-            expected_output="Description of the action's consequence, continuing the game narrative without requiring further immediate inputs from the user. Output in Portuguese (pt-br).",
+            expected_output=dedent(f"""The output MUST be a result JSON formatted dictionary structure for the events={event_id}
+                                containing the fields: decision={choice_id}, consequence (an update in game history
+                                using 200 maximum tokens) and stats_change containing fields: strength, 
+                                intelligence, agility and magic with the respectives values defined by your
+                                judgment from -4 to 4. It's not necessary to in all events apply stats changes, in suck
+                                cases the value 0 must be attributted. Output only in Portuguese (pt-br) with maximum of 500 tokens.
+                                """
+                                ),
             tools=tools,
             agent=self.agent,
             callback=callback,
@@ -71,17 +90,15 @@ class ArchivistTasks:
     def __init__(self, agent):
         self.agent = agent
         
-    def create_character(self, tools, user_id, player_info, context, callback):
+    def create_character(self, tools, chat_id, user_id, game_state, callback):
         return Task(
             description=dedent(f"""
-                               Create a detailed character for user_id={user_id} contextualized with the game world: {player_info}. 
-                               The character must have attributes name, user_id, background, traits, and initial stats 
-                               including strength, intelligence, agility, magic, and charisma, along with special equipment.
+                               Create a detailed character for user_id={user_id} contextualized with the game world: {game_state}. 
+                               The character must have ONLY user_id={user_id}, game_id={chat_id}, name, background, strength, intelligence, agility, and magic.
                                """),
             expected_output="A fully detailed character with all attributes and initial stats using a json formatted dictionary structure.",
             tools=tools,
             agent=self.agent,
-            context=context,
             callback=callback,
             human_input=False
         )

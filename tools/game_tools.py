@@ -1,12 +1,14 @@
 from crewai_tools import tool
 from langchain.agents import tool
 import google.generativeai as genai
-import telebot
+from telebot import TeleBot
 from telebot import apihelper
 from os import environ
 from dotenv import load_dotenv
 
 load_dotenv()
+
+bot = TeleBot(environ.get("BOT_TOKEN"))
 
 GOOGLE_API_KEY = environ.get('GOOGLE_API_KEY')
 genai.configure(api_key=GOOGLE_API_KEY)
@@ -17,21 +19,26 @@ apihelper.SESSION_TIME_TO_LIVE = 60*5
 class TelegramTools:
     def __init__(self, bot):
         self.bot = bot
-        
+    
+    # @tool
+    # def handle_text(message):
+    #     """function to capture data from players in the telegram chat."""
+    #     return message.text
+    
     @tool
-    def group_send_message(self, chat_id:str, response:str) -> str:
-        """function to interact with players in the telegram chat. must be passed two arguments chat_id and response. """
+    def group_send_message(chat_id:str, response:str) -> str:
+        """function to interact with players in the telegram chat. must be passed two arguments chat_id and a response string. """
         try:
-            self.bot.send_message(chat_id, response, parse_mode='Markdown')
+            bot.send_message(chat_id, response, parse_mode='Markdown')
         except Exception as inst:
             print(inst)
         return response
             
     @tool
-    def private_send_message(self, user_id, response:str) -> str:
+    def private_send_message(user_id, response:str) -> str:
         """function to send messages to players in the telegram chat."""
         try:
-            self.bot.send_message(user_id, response, parse_mode='Markdown')
+            bot.send_message(user_id, response, parse_mode='Markdown')
         except Exception as inst:
             print(inst)
         return response
@@ -74,4 +81,3 @@ class StorytellerTools:
         """ Create a description for a dynamic event that affects the course of the game. """
         event_description = self.llm.generate(f"Narrar um evento de {event} em um mundo de fantasia RPG.")
         return event_description
-              
