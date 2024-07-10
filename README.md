@@ -37,21 +37,22 @@ Para configurar e executar o projeto, siga os passos abaixo:
 
 Recomenda-se criar um ambiente virtual para isolar as dependências do projeto:
 
-# Instalação do ambiente virtual para Python 3
+## Instalação do ambiente virtual para Python 3
 ```bash
 python -m venv venv
 ```
-# Ativar o ambiente virtual
-# No Windows
+## Ativar o ambiente virtual
+### No Windows
 ```bash
 venv\Scripts\activate
 ```
-# No Unix ou MacOS
+### No Unix ou MacOS
 ```bash
 source venv/bin/activate
 ```
 
 3. **Instalação de Dependências**
+
 Instale todas as dependências necessárias executando:
 
 ```bash
@@ -59,6 +60,7 @@ pip install -r requirements.txt
 ```
 
 4. **Configuração do Bot do Telegram**
+
 Para interagir com o Telegram, você precisa de um token de bot:
 
 * Crie um bot conversando com o BotFather no Telegram e obtenha o token.
@@ -69,6 +71,7 @@ BOT_TOKEN='seu_token_aqui'
 ```
 
 5. **Execução do Bot**
+
 Uma vez configurado, inicie a aplicação com o seguinte comando:
 
 ```bash
@@ -77,6 +80,7 @@ python app.py
 Agora o bot deve estar rodando e você pode interagir com ele através do Telegram enviando comandos como /game para iniciar um novo jogo.
 
 **Usando o Bot**
+
 Para interagir com o bot no Telegram:
 
 * Envie /game nome_do_tema para iniciar um novo jogo.
