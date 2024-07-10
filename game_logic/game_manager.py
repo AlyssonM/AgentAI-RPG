@@ -236,8 +236,6 @@ class GameManager:
                 self.db.update_character_stats(user_id, new_result['stats_change'])
                 bot.send_message(chat_id, f"Decisão: {choice}\n{new_result['consequence']}")
 
-    
-   
     def send_character_details(self, bot, user_id):
         with self.db.session_scope() as session:
             # Busca os dados do personagem dentro do contexto da sessão
