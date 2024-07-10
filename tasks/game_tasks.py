@@ -34,7 +34,7 @@ class BardTasks:
     def narrate_event(self, tools, chat_id, user_id, game_chapter, event, callback):
         return Task(
             description=dedent(f"""
-                               Narrate the event "{event}" based on the current game chapter: {game_chapter}. 
+                               Narrate the event "{event}" based on the current game chapter event: {game_chapter}. 
                                Send it to the group {chat_id} to finish your job.
                                """
                                ),
@@ -52,13 +52,15 @@ class BardTasks:
             human_input=False
         )
 
-    def action_event(self, tools, choice_id, event_id, callback):
+    def action_event(self, tools, choice_id, event_id, chapter, callback):
         return Task(
             description=dedent(f"""
-                           Resolve the user's choice={choice_id}, for the events={event_id}. 
-                           This action should directly address the results of the user's choice without initiating 
-                           any new events.
-                           """),
+                                Resolve the user's choice (choice ID: {choice_id}) for event ID: {event_id} in the chapter: '{chapter}' of the game. 
+                                This task should conclusively address the outcomes based on the user's decision, ensuring that no new events are initiated as a result. 
+                                Analyze the scenario to calculate outcomes, incorporating both positive and negative consequences with a probabilistic approach. 
+                                It is essential that not all outcomes are favorable to the player; adverse consequences are also crucial for a balanced and engaging gameplay experience. 
+                                """
+                                ),
             expected_output=dedent(f"""The output MUST be a result JSON formatted dictionary structure for the events={event_id}
                                 containing the fields: decision={choice_id}, consequence (an update in game history
                                 using 200 maximum tokens) and stats_change containing fields: strength, 

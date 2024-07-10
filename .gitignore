@@ -131,7 +131,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-*/.rpgcore/
+.rpgcore/
 
 # Spyder project settings
 .spyderproject

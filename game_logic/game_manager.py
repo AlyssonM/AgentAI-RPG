@@ -11,6 +11,7 @@ class GameManager:
         self.db = Database(db_url)
         self.game_state = {
             "theme": "",
+            "chat_id": "",
             "current_chapter_index": 0,
             "game_history": [{
                 "chapter_title": "",
@@ -54,6 +55,7 @@ class GameManager:
     def initialize_game_state(self, chat_id, theme, title, description):
         game_state = {
             "theme": theme,
+            "chat_id": chat_id,
             "current_chapter_index": 0,
             "game_history": [{
                 "chapter_title": title,
@@ -73,7 +75,7 @@ class GameManager:
         agents = Agents(True)
         game_master = agents.creator_agent()
         game_master_task = GameMasterTasks(game_master).create_game_world(
-            [TelegramTools(bot).group_send_message],
+            [],
             chat_id,
             theme,
             [],
@@ -88,10 +90,11 @@ class GameManager:
         
         # Preparar o estado do jogo como um dicionário
         game_state = self.initialize_game_state(chat_id, theme, "The adventure begins!", result)
+        self.game_cache[chat_id] = game_state
         # Salvar o estado do jogo no banco de dados
         self.db.save_game(chat_id, theme, game_state)
         # Envia a descrição do game para o chat
-        #bot.send_message(chat_id, "Novo jogo iniciado com o tema: " + theme + "\n Descrição do jogo: \n" + result, parse_mode='Markdown')
+        bot.send_message(chat_id, "*Novo jogo iniciado com o tema:* " + theme + "\n *Descrição do jogo:* \n" + result, parse_mode='Markdown')
 
 
     def handle_join_game(self, chat_id, user_id, bot):
@@ -122,7 +125,7 @@ class GameManager:
                 character = self.db.create_character(**character_data)
                 bot.send_message(chat_id, f"{user_id} entrou no jogo.")
                 character_info = "\n".join([f"{key}: {value}" for key, value in character_data.items()])
-                #bot.send_message(user_id, f"Dados da personagem:\n{character_info}", parse_mode='Markdown')
+                bot.send_message(user_id, f"Dados da personagem:\n{character_info}", parse_mode='Markdown')
             else:
                 bot.send_message(user_id, f"Erro ao criar a personagem. Tente novamente.")
         else:
@@ -134,7 +137,7 @@ class GameManager:
             agents = Agents(True)
             game_bard = agents.storyteller_agent()
             game_bard_task = BardTasks(game_bard).narrate_event(
-                tools=[TelegramTools(bot).group_send_message],
+                tools=[],
                 chat_id=chat_id,
                 user_id=user_id,
                 game_chapter=game_state['game_history'][-1],
@@ -153,32 +156,55 @@ class GameManager:
                 new_event = json.loads(json_str)   # Converte o texto JSON em um dicionário Python
                 game_state['game_history'][-1]["events"].append(new_event) 
                 self.db.save_game_state(chat_id, game_state)
+                self.game_cache[chat_id] = game_state
+                message = (
+                    f"*Capítulo:* {game_state['game_history'][-1]['chapter_title']}\n"
+                    f"*Evento:* {game_state['game_history'][-1]['events'][-1]['event_id']}\n"
+                    f"{new_event['description']}"
+                )
+                bot.send_message(chat_id, message, parse_mode="Markdown")
     
     def new_game_event(self, chat_id, user_id, bot): 
         game_state = self.get_game_state(chat_id)
-        if game_state:
-            agents = Agents(True)
-            game_bard = agents.storyteller_agent()
-            game_bard_task = BardTasks(game_bard).narrate_event(
-                tools=[TelegramTools(bot).group_send_message],
-                chat_id=chat_id,
-                user_id=user_id,
-                game_chapter=game_state['game_history'][-1],
-                event=f"Continue adventure of {user_id}",
-                callback=[]
-            )
-            crew = Crew(
-                agents=[game_bard],
-                tasks=[game_bard_task],
-                verbose=True
-            )
-            result = crew.kickoff()
-            json_match = re.search(r'\{.*\}', result, re.DOTALL)
-            if json_match:
-                json_str = json_match.group(0)          # Captura o texto que corresponde ao JSON
-                new_event = json.loads(json_str)   # Converte o texto JSON em um dicionário Python
-                game_state['game_history'][-1]["events"].append(new_event) 
-                self.db.save_game_state(chat_id, game_state)
+        if game_state and game_state['chat_id'] == chat_id:
+            if 'results' in game_state['game_history'][-1]['events'][-1]:
+                agents = Agents(True)
+                game_bard = agents.storyteller_agent()
+                game_bard_task = BardTasks(game_bard).narrate_event(
+                    tools=[],
+                    chat_id=chat_id,
+                    user_id=user_id,
+                    game_chapter=game_state['game_history'][-1]['events'][-1],
+                    event=f"Continue adventure of {user_id}",
+                    callback=[]
+                )
+                crew = Crew(
+                    agents=[game_bard],
+                    tasks=[game_bard_task],
+                    verbose=True
+                )
+                result = crew.kickoff()
+                json_match = re.search(r'\{.*\}', result, re.DOTALL)
+                if json_match:
+                    json_str = json_match.group(0)          # Captura o texto que corresponde ao JSON
+                    new_event = json.loads(json_str)   # Converte o texto JSON em um dicionário Python
+                    game_state['game_history'][-1]["events"].append(new_event) 
+                    self.db.save_game_state(chat_id, game_state)
+                    self.game_cache[chat_id] = game_state
+                    
+                    message = (
+                        f"*Capítulo:* {game_state['game_history'][-1]['chapter_title']}\n"
+                        f"*Evento:* {game_state['game_history'][-1]['events'][-1]['event_id']}\n"
+                        f"{new_event['description']}"
+                    )
+                    bot.send_message(chat_id, message, parse_mode="Markdown")                
+                else:
+                    bot.send_message(chat_id, "Falha no processamento.. tente novamente em instantes.", parse_mode="Markdown")                
+            else:
+                bot.send_message(chat_id, "É necessário decidir sobre o último evento antes de criar novos eventos. use /choice {número}", parse_mode="Markdown")
+                
+        else:
+            bot.send_message(chat_id, "Erro ao carregar o game")
             
     def handle_game_choice(self, chat_id, user_id, choice, bot):
         # Implementação da lógica para processar a escolha do jogador
@@ -190,6 +216,7 @@ class GameManager:
                 tools=[],
                 choice_id=choice,
                 event_id=game_state['game_history'][-1]["events"][-1]["event_id"],
+                chapter=game_state['game_history'][-1]["events"][-1],
                 callback=[]
             )
             crew = Crew(
@@ -205,6 +232,7 @@ class GameManager:
                 print(new_result)
                 game_state['game_history'][-1]["events"][-1]["results"] = new_result
                 self.db.save_game_state(chat_id, game_state)
+                self.game_cache[chat_id] = game_state
                 self.db.update_character_stats(user_id, new_result['stats_change'])
                 bot.send_message(chat_id, f"Decisão: {choice}\n{new_result['consequence']}")
 
@@ -231,25 +259,34 @@ class GameManager:
                 # Envia uma mensagem se nenhum personagem for encontrado
                 bot.send_message(user_id, "Nenhum personagem encontrado para seu ID de usuário.")
 
+    def print_resume_data(self, bot, user_id, game_state, result_info):
+        results = (
+            f"*Decisão Tomada:* {result_info['decision']}\n"
+            f"*Consequência:* {result_info['consequence']}\n"
+            f"*Mudança de Status:*\n"
+            f"    - *Força:* {result_info['stats_change']['strength']}\n"
+            f"    - *Inteligência:* {result_info['stats_change']['intelligence']}\n"
+            f"    - *Agilidade:* {result_info['stats_change']['agility']}\n"
+            f"    - *Magia:* {result_info['stats_change']['magic']}\n"
+        )
+        resume_info = (
+            f"*Capítulo*: \n{game_state['game_history'][-1]['chapter_title']}\n"
+            f"*Evento*: \n{game_state['game_history'][-1]['events'][-1]['description']}\n"
+            f"*Resultado*: \n{results}\n"
+        )
+        bot.send_message(user_id, resume_info, parse_mode="Markdown")
+                
     def send_game_resume(self, bot, chat_id, user_id):
-        game_state = self.get_game_state(chat_id)
-        if game_state:
-            result_info = game_state['game_history'][-1]['events'][-1]["results"]
-            results = (
-                f"*Decisão Tomada:* {result_info['decision']}\n"
-                f"*Consequência:* {result_info['consequence']}\n"
-                f"*Mudança de Status:*\n"
-                f"    - *Força:* {result_info['stats_change']['strength']}\n"
-                f"    - *Inteligência:* {result_info['stats_change']['intelligence']}\n"
-                f"    - *Agilidade:* {result_info['stats_change']['agility']}\n"
-                f"    - *Magia:* {result_info['stats_change']['magic']}\n"
-            )
-            resume_info = (
-                f"*Capítulo*: \n{game_state['game_history'][-1]['chapter_title']}\n"
-                f"*Evento*: \n{game_state['game_history'][-1]['events'][-1]['description']}\n"
-                f"*Resultado*: \n{results}\n"
-            )
-            print(game_state['game_history'][-1]['events'])
-            bot.send_message(user_id, resume_info, parse_mode="Markdown")
+        game_state = self.db.get_game_state(chat_id) #self.get_game_state(chat_id)
+  
+        if game_state and game_state['chat_id'] == chat_id: 
+            if 'results' in game_state['game_history'][-1]['events'][-1]:
+                result_info = game_state['game_history'][-1]['events'][-1]['results']
+                self.print_resume_data(bot, user_id, game_state, result_info)
+            else:
+                result_info = game_state['game_history'][-1]['events'][-2]['results']
+                self.print_resume_data(bot, user_id, game_state, result_info)   
+        else:
+            bot.send_message(user_id, "Jogo não encontrado.", parse_mode="Markdown")
             
             
