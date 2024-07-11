@@ -8,7 +8,7 @@ class Agents():
     def __init__(self, verbose):
         self.llm = ChatGroq(temperature=0, api_key=os.getenv("GROQ_API_KEY"), model="llama3-8b-8192")
         self.allow_delegation = False
-        self.verbose = verbose
+        self.verbose = False
         self.tools = []
         
     

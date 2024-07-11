@@ -48,25 +48,28 @@ class BardTasks:
                                 ),
             tools=tools,
             agent=self.agent,
+            output_file= "./outputs/event.txt",
             callback=callback,
             human_input=False
         )
 
-    def action_event(self, tools, choice_id, event_id, chapter, callback):
+    def action_event(self, tools, choice_id, chapter, callback):
         return Task(
             description=dedent(f"""
-                                Resolve the user's choice (choice ID: {choice_id}) for event ID: {event_id} in the chapter: '{chapter}' of the game. 
+                                Resolve the user's choice (choice ID: {choice_id}) for 'event_id' in the chapter: '{chapter}' of the game. 
                                 This task should conclusively address the outcomes based on the user's decision, ensuring that no new events are initiated as a result. 
                                 Analyze the scenario to calculate outcomes, incorporating both positive and negative consequences with a probabilistic approach. 
-                                It is essential that not all outcomes are favorable to the player; adverse consequences are also crucial for a balanced and engaging gameplay experience. 
+                                It is essential that not all outcomes are favorable to the player; adverse consequences are also crucial for a balanced and 
+                                engaging gameplay experience. 
                                 """
                                 ),
-            expected_output=dedent(f"""The output MUST be a result JSON formatted dictionary structure for the events={event_id}
+            expected_output=dedent(f"""The output MUST be ONLY a result JSON formatted dictionary structure for the events='event_id'
                                 containing the fields: decision={choice_id}, consequence (an update in game history
                                 using 200 maximum tokens) and stats_change containing fields: strength, 
                                 intelligence, agility and magic with the respectives values defined by your
                                 judgment from -4 to 4. It's not necessary to in all events apply stats changes, in suck
                                 cases the value 0 must be attributted. Output only in Portuguese (pt-br) with maximum of 500 tokens.
+                                Do not add any comments strings or thoughts.
                                 """
                                 ),
             tools=tools,
@@ -95,12 +98,13 @@ class ArchivistTasks:
     def create_character(self, tools, chat_id, user_id, game_state, callback):
         return Task(
             description=dedent(f"""
-                               Create a detailed character for user_id={user_id} contextualized with the game world: {game_state}. 
+                               Create a character for user_id={user_id} contextualized with the game world: {game_state}. 
                                The character must have ONLY user_id={user_id}, game_id={chat_id}, name, background, strength, intelligence, agility, and magic.
                                """),
-            expected_output="A fully detailed character with all attributes and initial stats using a json formatted dictionary structure.",
+            expected_output="The output MUST be ONLY a JSON formatted dictionary structure with the character data. Do not add any comments strings. use background field for this.",
             tools=tools,
             agent=self.agent,
+            output_file= "./outputs/character.txt",
             callback=callback,
             human_input=False
         )

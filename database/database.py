@@ -33,6 +33,8 @@ class Database:
             # Update the game state
             game.state = json.dumps(game_state)  # Convert the dictionary to a JSON string
             session.add(game)  # Not necessary if only updating, but included for completeness
+            session.commit()
+            return game.state
     
     def save_game(self, chat_id, theme, context_dict, is_active=True):
         with self.session_scope() as session:
@@ -41,13 +43,13 @@ class Database:
             if game is None:
                 game = Game(chat_id=chat_id, theme=theme, state=context_json, is_active=is_active)
                 session.add(game)
-                session.commit()
             else:
                 game.state = context_json
                 game.theme = theme
                 game.is_active = is_active
 
-
+            session.commit()
+            
     def create_character(self, **kwargs):
         with self.session_scope() as session:
             character = session.query(Character).filter_by(user_id=kwargs.get('user_id')).first()

@@ -1,0 +1,19 @@
+{
+"event_id": 9,
+"user_id": 1129943309,
+"description": "Você sai do hotel e chega ao Mercado, onde nota que os preços estão realmente aumentados. Os mercadores estão tentando vender seus produtos a preços mais altos, mas também estão oferecendo descontos para atrair clientes. Você vê oportunidades para economizar, mas também nota que a crise econômica está afetando a cidade de forma significativa. Você pode:\n1. **Negociar com os mercadores**: tentar obter melhores preços ou descontos para os produtos que precisa.\n2. **Procurar por produtos baratos**: encontrar produtos que estejam a preços mais acessíveis e que possam ajudar a economizar.\n3. **Falar com os mercadores sobre a crise**: perguntar aos mercadores sobre a crise econômica e como eles estão lidando com a situação.",
+"choices": [
+{
+"choice_id": 1,
+"text": "Negociar com os mercadores"
+},
+{
+"choice_id": 2,
+"text": "Procurar por produtos baratos"
+},
+{
+"choice_id": 3,
+"text": "Falar com os mercadores sobre a crise"
+}
+]
+}

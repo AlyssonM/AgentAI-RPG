@@ -1,0 +1,10 @@
+{
+"game_id": -1002170627337,
+"user_id": 1129943309,
+"name": "Aerwyn Starweaver",
+"background": "Aerwyn was born in the Distrito dos Artistas, where she grew up surrounded by the vibrant colors and sounds of the city. She was always fascinated by the stories of the ancient dragons that once roamed the land, and spent countless hours poring over dusty tomes in the city's great library. As she grew older, Aerwyn became increasingly restless, feeling the call of adventure and the thrill of discovery. She left the city to explore the wider world, seeking out new lands, new cultures, and new magic.",
+"strength": 14,
+"intelligence": 18,
+"agility": 16,
+"magic": 20
+}

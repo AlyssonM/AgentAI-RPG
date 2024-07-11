@@ -88,5 +88,6 @@ Para interagir com o bot no Telegram:
 * Envie /choice <escolha> para fazer uma escolha durante o jogo.
 
 **Contribuições**
+
 Contribuições são bem-vindas! Para contribuir, faça um fork do repositório, faça suas alterações e envie um pull request.
 
